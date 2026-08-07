@@ -1,13 +1,31 @@
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import dotenv from "dotenv";
+import { pipeline } from "@xenova/transformers";
 
-dotenv.config();
+let extractor: any = null;
 
-export const embeddingModel = new GoogleGenerativeAIEmbeddings({
-  apiKey: process.env.GEMINI_API_KEY!,
-  model: "gemini-embedding-001",
-});
+async function getExtractor() {
+  if (!extractor) {
+    console.log("Loading local embedding model (first run only)...");
 
-export async function generateEmbedding(text: string): Promise<number[]> {
-  return embeddingModel.embedQuery(text);
+    extractor = await pipeline(
+      "feature-extraction",
+      "Xenova/all-MiniLM-L6-v2"
+    );
+
+    console.log("Local embedding model loaded.");
+  }
+
+  return extractor;
+}
+
+export async function generateEmbedding(
+  text: string
+): Promise<number[]> {
+  const model = await getExtractor();
+
+  const output = await model(text, {
+    pooling: "mean",
+    normalize: true,
+  });
+
+  return Array.from(output.data);
 }

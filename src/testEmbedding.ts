@@ -1,14 +1,15 @@
-import { generateEmbedding } from "./services/embedding.service";
+import "dotenv/config";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
 async function main() {
-  const vector = await generateEmbedding(
-    "GitSenseAI analyzes GitHub repositories."
-  );
+  const embeddings = new GoogleGenerativeAIEmbeddings({
+    apiKey: process.env.GEMINI_API_KEY!,
+    model: "gemini-embedding-001",
+  });
 
-  console.log("Embedding generated successfully!");
-  console.log("Vector dimension:", vector.length);
-  console.log("First 10 values:");
-  console.log(vector.slice(0, 10));
+  const vector = await embeddings.embedQuery("Hello world");
+
+  console.log("Embedding length:", vector.length);
 }
 
 main().catch(console.error);

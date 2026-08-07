@@ -22,8 +22,15 @@ const collection = await getCollection(collectionName);
   for (let i = 0; i < documents.length; i++) {
     const doc = documents[i];
 
+const textToEmbed = `
+File: ${doc.metadata.relativePath}
+Extension: ${doc.metadata.extension}
+
+${doc.pageContent}
+`;
+
 const embedding = await retry(() =>
-  generateEmbedding(doc.pageContent)
+  generateEmbedding(textToEmbed)
 );
 
     ids.push(

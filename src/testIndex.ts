@@ -39,7 +39,7 @@ if (alreadyIndexed) {
     const repoPath = await cloneRepository(repoUrl);
 
     console.log("Reading files...");
-    const documents = readRepositoryDocuments(repoPath);
+const documents = await readRepositoryDocuments(repoPath);
 
     console.log(`Found ${documents.length} documents`);
 

@@ -6,9 +6,15 @@ export async function splitDocuments(
 ): Promise<Document[]> {
 
   const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
-  });
+  chunkSize: 1800,
+  chunkOverlap: 300,
+  separators: [
+    "\n\n",
+    "\n",
+    " ",
+    "",
+  ],
+});
 
   const chunks = await splitter.splitDocuments(documents);
 

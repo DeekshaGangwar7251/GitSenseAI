@@ -10,7 +10,7 @@ export async function analyzeRepository(
   res: Response
 ) {
   try {
-    const { repoUrl } = req.body;
+    const { repoUrl, branch } = req.body;
 
     if (!repoUrl) {
       return res.status(400).json({
@@ -19,36 +19,56 @@ export async function analyzeRepository(
       });
     }
 
-    const repoPath = await cloneRepository(repoUrl);
+    console.log(
+      `Analyzing repository: ${repoUrl}`
+    );
 
-const documents = readRepositoryDocuments(repoPath);
-const chunks = await splitDocuments(documents);
+    console.log(
+      `Branch: ${branch ?? "default branch"}`
+    );
 
-// Collection name = repository folder name
-const collectionName = repoPath
-  .split("\\")
-  .pop()
-  ?.toLowerCase()!;
+    const repoPath = await cloneRepository(
+      repoUrl,
+      branch
+    );
 
-await indexDocuments(chunks, collectionName);
+    const documents = await readRepositoryDocuments(
+      repoPath
+    );
 
-return res.json({
-  success: true,
-  repository: repoPath,
-  collectionName,
-  totalDocuments: documents.length,
-  totalChunks: chunks.length,
-});
+    const chunks = await splitDocuments(
+      documents
+    );
+
+    // Collection name = repository folder name
+    const collectionName = repoPath
+      .split("\\")
+      .pop()
+      ?.toLowerCase()!;
+
+    await indexDocuments(
+      chunks,
+      collectionName
+    );
+
+    return res.json({
+      success: true,
+      repository: repoPath,
+      branch: branch ?? "default",
+      collectionName,
+      totalDocuments: documents.length,
+      totalChunks: chunks.length,
+    });
+
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       success: false,
-      message: "Repository cloning failed",
+      message: "Repository analysis failed",
     });
   }
 }
-
 export async function chatWithRepository(
   req: Request,
   res: Response
