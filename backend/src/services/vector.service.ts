@@ -1,19 +1,36 @@
 import { ChromaClient } from "chromadb";
+import { generateEmbedding } from "./embedding.service";
 
 const client = new ChromaClient({
   path: "http://localhost:8000",
 });
 
+// Use our local Xenova embedding model
+const localEmbeddingFunction = {
+  generate: async (texts: string[]): Promise<number[][]> => {
+    const embeddings: number[][] = [];
+
+    for (const text of texts) {
+      const embedding = await generateEmbedding(text);
+      embeddings.push(embedding);
+    }
+
+    return embeddings;
+  },
+};
+
 export async function getCollection(collectionName: string) {
   try {
     return await client.getCollection({
       name: collectionName,
+      embeddingFunction: localEmbeddingFunction,
     });
   } catch {
     console.log(`Creating collection: ${collectionName}`);
 
     return await client.createCollection({
       name: collectionName,
+      embeddingFunction: localEmbeddingFunction,
     });
   }
 }
@@ -24,6 +41,7 @@ export async function isCollectionIndexed(
   try {
     const collection = await client.getCollection({
       name: collectionName,
+      embeddingFunction: localEmbeddingFunction,
     });
 
     const count = await collection.count();

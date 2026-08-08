@@ -4,6 +4,7 @@ import { readRepositoryDocuments } from "../services/repository.service";
 import { splitDocuments } from "../services/chunk.service";
 import { indexDocuments } from "../services/index.service";
 import { askRepository } from "../services/chat.service";
+import { createRepositoryReport } from "../services/report.service";
 
 export async function analyzeRepository(
   req: Request,
@@ -98,6 +99,67 @@ export async function chatWithRepository(
     return res.status(500).json({
       success: false,
       message: "Failed to answer question",
+    });
+  }
+}
+export async function generateRepositoryReport(
+  req: Request,
+  res: Response
+) {
+  try {
+    const {
+      collectionName,
+      repositoryName,
+    } = req.body;
+
+    if (!collectionName) {
+      return res.status(400).json({
+        success: false,
+        message: "collectionName is required",
+      });
+    }
+
+    const name =
+      repositoryName ||
+      collectionName;
+
+    console.log(
+      `Generating report for collection: ${collectionName}`
+    );
+
+    const result =
+      await createRepositoryReport(
+        collectionName,
+        name
+      );
+
+    console.log(
+      "Repository report generated successfully."
+    );
+
+    return res.download(
+      result.pdfPath,
+      `${name}-report.pdf`,
+      (error) => {
+        if (error) {
+          console.error(
+            "PDF download error:",
+            error
+          );
+        }
+      }
+    );
+
+  } catch (error) {
+    console.error(
+      "Report generation failed:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to generate repository report",
     });
   }
 }

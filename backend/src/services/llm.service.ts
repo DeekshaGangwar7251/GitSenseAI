@@ -16,4 +16,7 @@ export const llm = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY!,
   model: "llama-3.3-70b-versatile",
   temperature: 0.2,
+
+  // Keep the generated report controlled.
+  maxTokens: 3500,
 });

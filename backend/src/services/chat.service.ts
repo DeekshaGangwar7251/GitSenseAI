@@ -2,12 +2,6 @@
 import { llm } from "./llm.service";
 import { searchRepository } from "./search.service";
 
-// const llm = new ChatGoogleGenerativeAI({
-//   model: "gemini-2.5-flash-lite",
-//   apiKey: process.env.GEMINI_API_KEY!,
-//   temperature: 0.2,
-// });
-
 export async function askRepository(
   collectionName: string,
   question: string

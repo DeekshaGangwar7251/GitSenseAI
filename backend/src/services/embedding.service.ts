@@ -1,10 +1,10 @@
-import { pipeline } from "@xenova/transformers";
-
 let extractor: any = null;
 
 async function getExtractor() {
   if (!extractor) {
     console.log("Loading local embedding model (first run only)...");
+
+    const { pipeline } = await import("@xenova/transformers");
 
     extractor = await pipeline(
       "feature-extraction",
