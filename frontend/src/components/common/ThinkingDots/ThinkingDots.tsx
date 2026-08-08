@@ -2,8 +2,7 @@ import { motion } from "framer-motion";
 
 function ThinkingDots() {
   return (
-    <div className="flex gap-2 py-1">
-
+    <div className="flex items-center gap-1.5">
       {[0, 1, 2].map((dot) => (
         <motion.div
           key={dot}
@@ -15,10 +14,9 @@ function ThinkingDots() {
             repeat: Infinity,
             delay: dot * 0.2,
           }}
-          className="h-2.5 w-2.5 rounded-full bg-violet-500"
+          className="h-2.5 w-2.5 shrink-0 rounded-full bg-violet-500"
         />
       ))}
-
     </div>
   );
 }

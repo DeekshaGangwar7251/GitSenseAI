@@ -7,24 +7,35 @@ import Footer from "../../components/landing/Footer";
 
 function Landing() {
   return (
-    <div className="min-h-screen bg-[#F7F8FC]">
+    <div className="min-h-screen w-full overflow-x-hidden bg-white">
       <Navbar />
 
-      <Hero />
+      <main>
+        <Hero />
 
-      <section id="features">
-        <FeatureGrid />
-      </section>
+        <section
+          id="features"
+          className="scroll-mt-20"
+        >
+          <FeatureGrid />
+        </section>
 
-      <section id="workflow">
-        <Workflow />
-      </section>
+        <section
+          id="workflow"
+          className="scroll-mt-20"
+        >
+          <Workflow />
+        </section>
 
-      <CTA />
+        <CTA />
 
-      <section id="about">
-        <Footer />
-      </section>
+        <section
+          id="about"
+          className="scroll-mt-20"
+        >
+          <Footer />
+        </section>
+      </main>
     </div>
   );
 }

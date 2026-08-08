@@ -31,7 +31,7 @@ function ChatWindow({
       </div>
 
       {/* Messages */}
-      <div className="max-h-[520px] space-y-6 overflow-y-auto p-8">
+      <div className="max-h-[520px] space-y-4 overflow-y-auto p-4 sm:space-y-6 sm:p-6 lg:p-8">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -48,7 +48,7 @@ function ChatWindow({
 
             {/* Message Bubble */}
             <div
-              className={`max-w-xl rounded-2xl p-5 ${
+              className={`max-w-[85%] rounded-2xl p-4 sm:max-w-xl sm:p-5 ${
                 message.sender === "user"
                   ? "bg-violet-600 text-white"
                   : "bg-violet-50 text-gray-800"

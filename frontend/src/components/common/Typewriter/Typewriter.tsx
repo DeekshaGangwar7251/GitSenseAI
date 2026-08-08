@@ -40,9 +40,9 @@ function Typewriter({
   }, [text, animate, onFinished]);
 
   return (
-    <p className="whitespace-pre-wrap">
+    <span className="block max-w-full break-words whitespace-pre-wrap">
       {displayed}
-    </p>
+    </span>
   );
 }
 

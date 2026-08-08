@@ -19,7 +19,7 @@ function ChatInput({ onSend }: Props) {
   return (
     <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
 
-      <div className="flex gap-4">
+      <div className="flex w-full gap-2 sm:gap-4">
 
         <input
           value={value}

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+
 
 type Props = {
   onQuestionClick: (question: string) => void;

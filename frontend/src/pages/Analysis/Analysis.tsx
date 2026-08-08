@@ -12,44 +12,60 @@ function Analysis() {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
+    const repositoryInfo =
+      sessionStorage.getItem("repositoryInfo");
+
+    if (!repositoryInfo) {
+      navigate("/");
+      return;
+    }
+
+    /*
+     * Backend analysis has already completed.
+     * Animate the completed steps for better UX.
+     */
+    let step = 0;
+
     const timer = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev === analysisSteps.length) {
-          clearInterval(timer);
+      step++;
 
-          setTimeout(() => {
-            navigate("/workspace");
-          }, 1200);
+      setCurrentStep(step);
 
-          return prev;
-        }
+      if (step >= analysisSteps.length) {
+        clearInterval(timer);
 
-        return prev + 1;
-      });
-    }, 1800);
+        setTimeout(() => {
+          navigate("/workspace");
+        }, 1000);
+      }
+    }, 500);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [navigate]);
 
   const progress = Math.round(
     (currentStep / analysisSteps.length) * 100
   );
 
   return (
-    <div className="min-h-screen bg-[#F7F8FC] flex items-center justify-center p-6">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gray-50 px-4 py-8 sm:px-6 sm:py-12 md:flex md:items-center md:justify-center">
 
-      <div className="w-full max-w-3xl rounded-3xl bg-white p-10 shadow-xl">
+      <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl sm:rounded-3xl sm:p-8 md:p-10">
 
-        <h1 className="text-4xl font-bold">
-          Analyzing Repository...
-        </h1>
+        {/* Heading */}
+        <div className="text-center md:text-left">
+          <h1 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl md:text-4xl">
+            Repository Analyzed Successfully
+          </h1>
 
-        <p className="mt-3 text-gray-500">
-          Please wait while GitSenseAI understands the codebase.
-        </p>
+          <p className="mt-3 text-sm leading-6 text-gray-500 sm:text-base">
+            GitSenseAI has analyzed the repository.
+            Preparing your workspace...
+          </p>
+        </div>
 
-        <div className="mt-10 space-y-4">
-
+        {/* Progress Steps */}
+        <div className="mt-8 space-y-3 sm:mt-10 sm:space-y-4">
           {analysisSteps.map((step, index) => (
             <ProgressStep
               key={step}
@@ -58,19 +74,19 @@ function Analysis() {
               active={index === currentStep}
             />
           ))}
-
         </div>
 
-        <div className="mt-10">
-
-          <ProgressBar
-            progress={progress}
-          />
-
+        {/* Progress Bar */}
+        <div className="mt-8 sm:mt-10">
+          <ProgressBar progress={progress} />
         </div>
+
+        {/* Percentage */}
+        <p className="mt-3 text-center text-xs text-gray-400 sm:text-sm">
+          {progress}% complete
+        </p>
 
       </div>
-
     </div>
   );
 }

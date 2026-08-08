@@ -1,35 +1,34 @@
-import { Bot, FolderGit2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FileText } from "lucide-react";
 
 function WorkspaceHeader() {
+  const navigate = useNavigate();
+
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-violet-600 p-2 text-white">
-            <Bot size={22} />
-          </div>
+    <header className="border-b border-gray-200 bg-white">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
-          <div>
-            <h1 className="font-bold text-gray-900">
-              GitSenseAI
-            </h1>
+        {/* Logo / Title */}
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">
+            GitSenseAI
+          </h1>
 
-            <p className="text-xs text-gray-500">
-              AI Repository Assistant
-            </p>
-          </div>
+          <p className="text-sm text-gray-500">
+            Repository Workspace
+          </p>
         </div>
 
-        <div className="hidden items-center gap-2 rounded-full bg-violet-50 px-4 py-2 md:flex">
-          <FolderGit2
-            size={18}
-            className="text-violet-600"
-          />
+        {/* Report Button */}
+        <button
+          onClick={() => navigate("/reports")}
+          className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700"
+        >
+          <FileText size={18} />
 
-          <span className="text-sm font-medium text-violet-700">
-            facebook/react
-          </span>
-        </div>
+          Generate Report
+        </button>
+
       </div>
     </header>
   );
