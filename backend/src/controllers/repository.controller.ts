@@ -1,10 +1,23 @@
 import { Request, Response } from "express";
+
 import { cloneRepository } from "../services/git.service";
-import { readRepositoryDocuments } from "../services/repository.service";
+
+import {
+  readRepositoryDocuments,
+  getRepositoryFiles,
+  getRepositoryFileContent,
+} from "../services/repository.service";
+
 import { splitDocuments } from "../services/chunk.service";
 import { indexDocuments } from "../services/index.service";
 import { askRepository } from "../services/chat.service";
 import { createRepositoryReport } from "../services/report.service";
+
+import {
+  saveRepository,
+  getRepositoryPath,
+} from "../services/repository-store.service";
+
 
 export async function analyzeRepository(
   req: Request,
@@ -33,19 +46,31 @@ export async function analyzeRepository(
       branch
     );
 
-    const documents = await readRepositoryDocuments(
-      repoPath
-    );
+    const documents =
+      await readRepositoryDocuments(
+        repoPath
+      );
 
-    const chunks = await splitDocuments(
-      documents
-    );
+    const chunks =
+      await splitDocuments(
+        documents
+      );
 
     // Collection name = repository folder name
     const collectionName = repoPath
       .split("\\")
       .pop()
       ?.toLowerCase()!;
+
+    /*
+     * Save the relationship between the
+     * ChromaDB collection and the cloned
+     * repository path.
+     */
+    saveRepository(
+      collectionName,
+      repoPath
+    );
 
     await indexDocuments(
       chunks,
@@ -57,8 +82,10 @@ export async function analyzeRepository(
       repository: repoPath,
       branch: branch ?? "default",
       collectionName,
-      totalDocuments: documents.length,
-      totalChunks: chunks.length,
+      totalDocuments:
+        documents.length,
+      totalChunks:
+        chunks.length,
     });
 
   } catch (error) {
@@ -66,42 +93,57 @@ export async function analyzeRepository(
 
     return res.status(500).json({
       success: false,
-      message: "Repository analysis failed",
+      message:
+        "Repository analysis failed",
     });
   }
 }
+
+
 export async function chatWithRepository(
   req: Request,
   res: Response
 ) {
   try {
-    const { collectionName, question } = req.body;
+    const {
+      collectionName,
+      question,
+    } = req.body;
 
-    if (!collectionName || !question) {
+    if (
+      !collectionName ||
+      !question
+    ) {
       return res.status(400).json({
         success: false,
-        message: "collectionName and question are required",
+        message:
+          "collectionName and question are required",
       });
     }
 
-    const result = await askRepository(
-      collectionName,
-      question
-    );
+    const result =
+      await askRepository(
+        collectionName,
+        question
+      );
 
     return res.json({
       success: true,
       ...result,
     });
+
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to answer question",
+      message:
+        "Failed to answer question",
     });
   }
 }
+
+
 export async function generateRepositoryReport(
   req: Request,
   res: Response
@@ -115,7 +157,8 @@ export async function generateRepositoryReport(
     if (!collectionName) {
       return res.status(400).json({
         success: false,
-        message: "collectionName is required",
+        message:
+          "collectionName is required",
       });
     }
 
@@ -160,6 +203,134 @@ export async function generateRepositoryReport(
       success: false,
       message:
         "Failed to generate repository report",
+    });
+  }
+}
+
+
+/*
+ * Get actual files from the analyzed repository.
+ *
+ * GET:
+ * /api/repository/files?collectionName=gitsenseai
+ */
+export async function getRepositoryFileTree(
+  req: Request,
+  res: Response
+) {
+  try {
+    const {
+      collectionName,
+    } = req.query;
+
+    if (!collectionName) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "collectionName is required",
+      });
+    }
+
+    const repositoryPath =
+      getRepositoryPath(
+        String(collectionName)
+      );
+
+    if (!repositoryPath) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Repository not found. Please analyze the repository again.",
+      });
+    }
+
+    const files =
+      getRepositoryFiles(
+        repositoryPath
+      );
+
+    return res.json({
+      success: true,
+      files,
+    });
+
+  } catch (error) {
+    console.error(
+      "Failed to get repository files:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to load repository files",
+    });
+  }
+}
+
+
+/*
+ * Get actual content of a repository file.
+ *
+ * GET:
+ * /api/repository/file?collectionName=gitsenseai&filePath=src/app.ts
+ */
+export async function getRepositoryFile(
+  req: Request,
+  res: Response
+) {
+  try {
+    const {
+      collectionName,
+      filePath,
+    } = req.query;
+
+    if (
+      !collectionName ||
+      !filePath
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "collectionName and filePath are required",
+      });
+    }
+
+    const repositoryPath =
+      getRepositoryPath(
+        String(collectionName)
+      );
+
+    if (!repositoryPath) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Repository not found. Please analyze the repository again.",
+      });
+    }
+
+    const content =
+      getRepositoryFileContent(
+        repositoryPath,
+        String(filePath)
+      );
+
+    return res.json({
+      success: true,
+      filePath,
+      content,
+    });
+
+  } catch (error) {
+    console.error(
+      "Failed to get repository file:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to load file",
     });
   }
 }
