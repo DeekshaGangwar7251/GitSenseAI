@@ -68,7 +68,7 @@ function Workspace() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/repository/files?collectionName=${encodeURIComponent(
+          `http://https://gitsenseai-k9wq.onrender.com/api/repository/files?collectionName=${encodeURIComponent(
             repositoryInfo.collectionName
           )}`
         );
@@ -110,7 +110,7 @@ function Workspace() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/repository/file?collectionName=${encodeURIComponent(
+        `http://https://gitsenseai-k9wq.onrender.com/api/repository/file?collectionName=${encodeURIComponent(
           repositoryInfo.collectionName
         )}&filePath=${encodeURIComponent(filePath)}`
       );
@@ -221,7 +221,7 @@ function Workspace() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/repository/chat",
+        "http://https://gitsenseai-k9wq.onrender.com/api/repository/chat",
         {
           method: "POST",
           headers: {
