@@ -68,7 +68,7 @@ function Workspace() {
 
       try {
         const response = await fetch(
-          `https://gitsenseai-2.onrender.com/api/repository/files?collectionName=${encodeURIComponent(
+          ` https://gitsenseai-3.onrender.com/api/repository/files?collectionName=${encodeURIComponent(
             repositoryInfo.collectionName
           )}`
         );
@@ -110,7 +110,7 @@ function Workspace() {
 
     try {
       const response = await fetch(
-        `https://gitsenseai-2.onrender.com/api/repository/file?collectionName=${encodeURIComponent(
+        ` https://gitsenseai-3.onrender.com/api/repository/file?collectionName=${encodeURIComponent(
           repositoryInfo.collectionName
         )}&filePath=${encodeURIComponent(filePath)}`
       );
@@ -221,7 +221,7 @@ function Workspace() {
 
     try {
       const response = await fetch(
-        "https://gitsenseai-2.onrender.com/api/repository/chat",
+        " https://gitsenseai-3.onrender.com/api/repository/chat",
         {
           method: "POST",
           headers: {
