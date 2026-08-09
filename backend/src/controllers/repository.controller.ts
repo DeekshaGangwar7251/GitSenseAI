@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-
+import path from "path";
 import { cloneRepository } from "../services/git.service";
 
 import {
@@ -57,10 +57,7 @@ export async function analyzeRepository(
       );
 
     // Collection name = repository folder name
-    const collectionName = repoPath
-      .split("\\")
-      .pop()
-      ?.toLowerCase()!;
+    const collectionName = path.basename(repoPath).toLowerCase();
 
     /*
      * Save the relationship between the
