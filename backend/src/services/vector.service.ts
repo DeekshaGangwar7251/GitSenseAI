@@ -2,7 +2,9 @@ import { ChromaClient } from "chromadb";
 import { generateEmbedding } from "./embedding.service";
 
 const client = new ChromaClient({
-  path: process.env.CHROMA_URL || "http://localhost:8000",
+  host: "gitsenseai-chromadb.onrender.com",
+  port: 443,
+  ssl: true,
 });
 
 // Use our local Xenova embedding model
