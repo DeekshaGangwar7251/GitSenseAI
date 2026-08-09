@@ -9,6 +9,6 @@ export default defineConfig({
   ],
 
   preview: {
-    allowedHosts: ["gitsenseai-1.onrender.com"],
+    allowedHosts: ["gitsenseai-4.onrender.com"],
   },
 });
