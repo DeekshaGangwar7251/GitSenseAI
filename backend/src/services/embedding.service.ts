@@ -17,6 +17,7 @@ async function getExtractor() {
   return extractor;
 }
 
+// Single text embedding
 export async function generateEmbedding(
   text: string
 ): Promise<number[]> {
@@ -28,4 +29,36 @@ export async function generateEmbedding(
   });
 
   return Array.from(output.data);
+}
+
+// Multiple text embeddings
+export async function generateEmbeddings(
+  texts: string[]
+): Promise<number[][]> {
+  const model = await getExtractor();
+
+  console.log(`Generating embeddings for ${texts.length} chunks...`);
+
+  const output = await model(texts, {
+    pooling: "mean",
+    normalize: true,
+  });
+
+  const data = Array.from(output.data) as number[];
+
+  // all-MiniLM-L6-v2 produces 384-dimensional embeddings
+  const dimension = 384;
+
+  const embeddings: number[][] = [];
+
+  for (let i = 0; i < texts.length; i++) {
+    embeddings.push(
+      data.slice(
+        i * dimension,
+        (i + 1) * dimension
+      )
+    );
+  }
+
+  return embeddings;
 }

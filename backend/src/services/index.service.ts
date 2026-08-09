@@ -1,76 +1,109 @@
 import { Document } from "@langchain/core/documents";
 import { getCollection } from "./vector.service";
-import { generateEmbedding } from "./embedding.service";
+import { generateEmbeddings } from "./embedding.service";
 import { retry } from "../utils/retry";
 
-
-const BATCH_SIZE = 50;
+const EMBEDDING_BATCH_SIZE = 10;
+const CHROMA_BATCH_SIZE = 50;
 
 export async function indexDocuments(
   documents: Document[],
   collectionName: string
-){
-const collection = await getCollection(collectionName);
+) {
+  const collection = await getCollection(collectionName);
 
-  const ids: string[] = [];
-  const embeddings: number[][] = [];
-  const texts: string[] = [];
-  const metadatas: Record<string, any>[] = [];
+  console.log(
+    `Indexing ${documents.length} chunks...`
+  );
 
-  console.log(`Indexing ${documents.length} chunks...`);
+  for (
+    let start = 0;
+    start < documents.length;
+    start += EMBEDDING_BATCH_SIZE
+  ) {
+    const batch = documents.slice(
+      start,
+      start + EMBEDDING_BATCH_SIZE
+    );
 
-  for (let i = 0; i < documents.length; i++) {
-    const doc = documents[i];
-
-const textToEmbed = `
+    const textsToEmbed = batch.map((doc) => {
+      return `
 File: ${doc.metadata.relativePath}
 Extension: ${doc.metadata.extension}
 
 ${doc.pageContent}
 `;
+    });
 
-const embedding = await retry(() =>
-  generateEmbedding(textToEmbed)
-);
+    console.log(
+      `Generating embeddings: ${start + 1}-${Math.min(
+        start + batch.length,
+        documents.length
+      )}/${documents.length}`
+    );
 
-    ids.push(
-  `${doc.metadata.fileName}-${i}-${Date.now()}`
-);
-    embeddings.push(embedding);
-    texts.push(doc.pageContent);
+    // Generate embeddings for the whole batch
+    const embeddings = await retry(() =>
+      generateEmbeddings(textsToEmbed)
+    );
 
-   metadatas.push({
-  source: doc.metadata.source ?? "",
-  relativePath: doc.metadata.relativePath ?? "",
-  fileName: doc.metadata.fileName ?? "",
-  extension: doc.metadata.extension ?? "",
-});
+    const ids: string[] = [];
+    const texts: string[] = [];
+    const metadatas: Record<string, any>[] = [];
 
-    if ((i + 1) % 10 === 0 || i === documents.length - 1) {
-     const percentage = (
-  ((i + 1) / documents.length) * 100
-).toFixed(1);
+    batch.forEach((doc, index) => {
+      ids.push(
+        `${doc.metadata.fileName}-${start + index}-${Date.now()}`
+      );
 
-console.log(
-  `Processed ${i + 1}/${documents.length} (${percentage}%)`
-);
+      texts.push(doc.pageContent);
+
+      metadatas.push({
+        source: doc.metadata.source ?? "",
+        relativePath:
+          doc.metadata.relativePath ?? "",
+        fileName:
+          doc.metadata.fileName ?? "",
+        extension:
+          doc.metadata.extension ?? "",
+      });
+    });
+
+    // Store this batch in ChromaDB
+    for (
+      let i = 0;
+      i < ids.length;
+      i += CHROMA_BATCH_SIZE
+    ) {
+      const end = Math.min(
+        i + CHROMA_BATCH_SIZE,
+        ids.length
+      );
+
+      await collection.add({
+        ids: ids.slice(i, end),
+        embeddings: embeddings.slice(i, end),
+        documents: texts.slice(i, end),
+        metadatas: metadatas.slice(i, end),
+      });
     }
+
+    const processed = Math.min(
+      start + batch.length,
+      documents.length
+    );
+
+    const percentage = (
+      (processed / documents.length) *
+      100
+    ).toFixed(1);
+
+    console.log(
+      `Processed ${processed}/${documents.length} (${percentage}%)`
+    );
   }
 
- for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-  const end = Math.min(i + BATCH_SIZE, ids.length);
-
-  await collection.add({
-    ids: ids.slice(i, end),
-    embeddings: embeddings.slice(i, end),
-    documents: texts.slice(i, end),
-    metadatas: metadatas.slice(i, end),
-  });
-
   console.log(
-    `Stored ${end}/${ids.length} chunks in ChromaDB`
+    "Repository indexed successfully!"
   );
-}
-
-console.log("Repository indexed successfully!");
 }
