@@ -20,7 +20,7 @@ function RepositoryInput() {
 
     try {
       const response = await fetch(
-        "https://gitsenseai-k9wq.onrender.com/api/repository/analyze",
+        "https://gitsenseai-2.onrender.com/api/repository/analyze",
         {
           method: "POST",
           headers: {
