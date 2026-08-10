@@ -66,7 +66,7 @@ function Reports() {
        * replace this with your deployed backend URL.
        */
       const response = await fetch(
-        `http://localhost:5000/api/repository/report`,
+        `https://gitsenseai-3.onrender.com/api/repository/report`,
         {
           method: "POST",
           headers: {
