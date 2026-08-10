@@ -68,7 +68,7 @@ function Workspace() {
 
       try {
         const response = await fetch(
-          ` https://gitsenseai-3.onrender.com/api/repository/files?collectionName=${encodeURIComponent(
+          `http://localhost:5000/api/repository/files?collectionName=${encodeURIComponent(
             repositoryInfo.collectionName
           )}`
         );
@@ -110,7 +110,7 @@ function Workspace() {
 
     try {
       const response = await fetch(
-        ` https://gitsenseai-3.onrender.com/api/repository/file?collectionName=${encodeURIComponent(
+        `http://localhost:5000/api/repository/file?collectionName=${encodeURIComponent(
           repositoryInfo.collectionName
         )}&filePath=${encodeURIComponent(filePath)}`
       );
@@ -221,7 +221,7 @@ function Workspace() {
 
     try {
       const response = await fetch(
-        " https://gitsenseai-3.onrender.com/api/repository/chat",
+        "http://localhost:5000/api/repository/chat",
         {
           method: "POST",
           headers: {
@@ -281,18 +281,16 @@ function Workspace() {
 
       <WorkspaceHeader />
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-6 px-3 py-4 sm:px-5 sm:py-6 lg:flex-row lg:gap-8 lg:px-6 lg:py-8">
+     <main className="mx-auto flex max-w-7xl flex-col gap-6 px-3 py-4 sm:px-5 sm:py-6 lg:flex-row lg:gap-8 lg:px-6 lg:py-8">
 
   {/* Repository Explorer */}
-  <div className="w-full lg:w-64 lg:shrink-0">
-    <RepositorySidebar
-      repositoryTree={repositoryTree}
-      onFileSelect={handleFileSelect}
-    />
-  </div>
+  <RepositorySidebar
+    repositoryTree={repositoryTree}
+    onFileSelect={handleFileSelect}
+  />
 
   {/* Main Workspace */}
-  <section className="min-w-0 flex-1 space-y-4 sm:space-y-6">
+  <div className="min-w-0 flex-1 space-y-6">
 
     <WelcomeCard
       onQuestionClick={handleSend}
@@ -307,7 +305,6 @@ function Workspace() {
       onSend={handleSend}
     />
 
-    {/* Code Viewer */}
     <CodeViewer
       fileName={
         selectedFile || "Select a file"
@@ -320,7 +317,7 @@ function Workspace() {
       }
     />
 
-  </section>
+  </div>
 
 </main>
     </div>
