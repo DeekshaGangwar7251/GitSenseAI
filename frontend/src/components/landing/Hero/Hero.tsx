@@ -37,9 +37,8 @@ function Hero() {
           </h1>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-gray-600">
-            Upload any GitHub repository URL or ZIP file and let AI explain the
+            Paste any GitHub repository URL and let AI explain the
             architecture, authentication flow, APIs, bugs, and documentation
-            using LLM + RAG.
           </p>
         </motion.div>
 

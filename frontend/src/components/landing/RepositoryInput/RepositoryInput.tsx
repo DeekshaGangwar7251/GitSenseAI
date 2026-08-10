@@ -79,29 +79,29 @@ function RepositoryInput() {
       <div className="rounded-2xl border border-violet-100 bg-white p-3 shadow-xl shadow-violet-100/40">
 
         {/* Repository URL */}
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !loading) {
-                handleAnalyze();
-              }
-            }}
-            placeholder="https://github.com/username/repository"
-            disabled={loading}
-            className="flex-1 rounded-xl border-0 px-4 py-3 text-gray-700 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-violet-200"
-          />
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+  <input
+    type="text"
+    value={repoUrl}
+    onChange={(e) => setRepoUrl(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" && !loading) {
+        handleAnalyze();
+      }
+    }}
+    placeholder="https://github.com/username/repository"
+    disabled={loading}
+    className="w-full flex-1 rounded-xl border-0 px-4 py-3 text-gray-700 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-violet-200"
+  />
 
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            className="rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Analyzing..." : "Analyze Repository"}
-          </button>
-        </div>
+  <button
+    onClick={handleAnalyze}
+    disabled={loading}
+    className="w-full rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+  >
+    {loading ? "Analyzing..." : "Analyze Repository"}
+  </button>
+</div>
 
         {/* Branch */}
         <div className="mt-3">
