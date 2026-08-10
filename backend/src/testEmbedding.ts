@@ -1,15 +1,49 @@
 import "dotenv/config";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import {
+  generateEmbedding,
+  generateEmbeddings,
+} from "./services/embedding.service";
 
-async function main() {
-  const embeddings = new GoogleGenerativeAIEmbeddings({
-    apiKey: process.env.GEMINI_API_KEY!,
-    model: "gemini-embedding-001",
-  });
+async function test() {
+  console.log("Testing single embedding...");
 
-  const vector = await embeddings.embedQuery("Hello world");
+  const single = await generateEmbedding(
+    "GitSenseAI is a repository analysis tool."
+  );
 
-  console.log("Embedding length:", vector.length);
+  console.log(
+    "Single embedding length:",
+    single.length
+  );
+
+  console.log("\nTesting batch embeddings...");
+
+  const batch = await generateEmbeddings([
+    "React frontend application",
+    "Node.js Express backend",
+    "ChromaDB vector database",
+    "Gemini embedding model",
+    "Groq language model",
+  ]);
+
+  console.log(
+    "Number of embeddings:",
+    batch.length
+  );
+
+  console.log(
+    "Each embedding length:",
+    batch[0]?.length
+  );
+
+  console.log("\nGemini embedding test successful! ✅");
 }
 
-main().catch(console.error);
+test().catch((error) => {
+  console.error(
+    "Embedding test failed:",
+    error
+  );
+
+  process.exit(1);
+});

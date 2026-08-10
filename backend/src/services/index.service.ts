@@ -1,10 +1,9 @@
 import { Document } from "@langchain/core/documents";
 import { getCollection } from "./vector.service";
 import { generateEmbeddings } from "./embedding.service";
-import { retry } from "../utils/retry";
 
-const EMBEDDING_BATCH_SIZE = 10;
-const CHROMA_BATCH_SIZE = 50;
+const BATCH_SIZE = 5;
+const MAX_EMBEDDING_CHARS = 2000;
 
 export async function indexDocuments(
   documents: Document[],
@@ -12,41 +11,106 @@ export async function indexDocuments(
 ) {
   const collection = await getCollection(collectionName);
 
+  // --------------------------------------------------
+  // Filter out dependency lock files
+  // --------------------------------------------------
+  const filteredDocuments = documents.filter((doc) => {
+    const fileName =
+      doc.metadata.fileName?.toLowerCase() ?? "";
+
+    return (
+      fileName !== "package-lock.json" &&
+      fileName !== "yarn.lock" &&
+      fileName !== "pnpm-lock.yaml"
+    );
+  });
+
   console.log(
-    `Indexing ${documents.length} chunks...`
+    `Original chunks: ${documents.length}`
   );
 
+  console.log(
+    `Chunks after filtering lock files: ${filteredDocuments.length}`
+  );
+
+  console.log(
+    `Indexing ${filteredDocuments.length} chunks...`
+  );
+
+  // --------------------------------------------------
+  // Process documents in small batches
+  // --------------------------------------------------
   for (
     let start = 0;
-    start < documents.length;
-    start += EMBEDDING_BATCH_SIZE
+    start < filteredDocuments.length;
+    start += BATCH_SIZE
   ) {
-    const batch = documents.slice(
+    const batch = filteredDocuments.slice(
       start,
-      start + EMBEDDING_BATCH_SIZE
+      start + BATCH_SIZE
     );
 
-    const textsToEmbed = batch.map((doc) => {
+    // --------------------------------------------------
+    // Prepare text for Gemini embedding
+    // --------------------------------------------------
+    const textsToEmbed = batch.map((doc, index) => {
+      const content = doc.pageContent
+        .replace(/\0/g, "")
+        .slice(0, MAX_EMBEDDING_CHARS);
+
+      console.log(
+        `Embedding item ${index + 1}: ${
+          doc.metadata.relativePath
+        } (${content.length} chars)`
+      );
+
       return `
 File: ${doc.metadata.relativePath}
 Extension: ${doc.metadata.extension}
 
-${doc.pageContent}
+${content}
 `;
     });
 
+    const processedBeforeBatch = start;
+
     console.log(
-      `Generating embeddings: ${start + 1}-${Math.min(
+      `Generating embeddings for ${
+        processedBeforeBatch + 1
+      }-${Math.min(
         start + batch.length,
-        documents.length
-      )}/${documents.length}`
+        filteredDocuments.length
+      )}/${filteredDocuments.length}`
     );
 
-    // Generate embeddings for the whole batch
-    const embeddings = await retry(() =>
-      generateEmbeddings(textsToEmbed)
-    );
+    // --------------------------------------------------
+    // Generate Gemini embeddings
+    // --------------------------------------------------
+    const embeddings =
+      await generateEmbeddings(textsToEmbed);
 
+    // --------------------------------------------------
+    // Validate Gemini response
+    // --------------------------------------------------
+    if (
+      embeddings.length !== batch.length ||
+      embeddings.some(
+        (embedding) =>
+          !Array.isArray(embedding) ||
+          embedding.length === 0 ||
+          embedding.some(
+            (value) => typeof value !== "number"
+          )
+      )
+    ) {
+      throw new Error(
+        `Invalid Gemini embeddings. Expected ${batch.length} embeddings, received ${embeddings.length}.`
+      );
+    }
+
+    // --------------------------------------------------
+    // Prepare ChromaDB records
+    // --------------------------------------------------
     const ids: string[] = [];
     const texts: string[] = [];
     const metadatas: Record<string, any>[] = [];
@@ -56,6 +120,7 @@ ${doc.pageContent}
         `${doc.metadata.fileName}-${start + index}-${Date.now()}`
       );
 
+      // Store the COMPLETE document in ChromaDB.
       texts.push(doc.pageContent);
 
       metadatas.push({
@@ -69,37 +134,31 @@ ${doc.pageContent}
       });
     });
 
-    // Store this batch in ChromaDB
-    for (
-      let i = 0;
-      i < ids.length;
-      i += CHROMA_BATCH_SIZE
-    ) {
-      const end = Math.min(
-        i + CHROMA_BATCH_SIZE,
-        ids.length
-      );
+    // --------------------------------------------------
+    // Store embeddings + documents in ChromaDB
+    // --------------------------------------------------
+    await collection.add({
+      ids,
+      embeddings,
+      documents: texts,
+      metadatas,
+    });
 
-      await collection.add({
-        ids: ids.slice(i, end),
-        embeddings: embeddings.slice(i, end),
-        documents: texts.slice(i, end),
-        metadatas: metadatas.slice(i, end),
-      });
-    }
-
+    // --------------------------------------------------
+    // Progress
+    // --------------------------------------------------
     const processed = Math.min(
       start + batch.length,
-      documents.length
+      filteredDocuments.length
     );
 
     const percentage = (
-      (processed / documents.length) *
+      (processed / filteredDocuments.length) *
       100
     ).toFixed(1);
 
     console.log(
-      `Processed ${processed}/${documents.length} (${percentage}%)`
+      `Stored ${processed}/${filteredDocuments.length} chunks (${percentage}%)`
     );
   }
 

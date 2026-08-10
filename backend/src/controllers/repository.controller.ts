@@ -57,7 +57,8 @@ export async function analyzeRepository(
       );
 
     // Collection name = repository folder name
-    const collectionName = path.basename(repoPath).toLowerCase();
+   const collectionName =
+  `${path.basename(repoPath).toLowerCase()}-gemini`;
 
     /*
      * Save the relationship between the

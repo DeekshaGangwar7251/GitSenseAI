@@ -1,64 +1,75 @@
-let extractor: any = null;
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
-async function getExtractor() {
-  if (!extractor) {
-    console.log("Loading local embedding model (first run only)...");
+const embeddings = new GoogleGenerativeAIEmbeddings({
+  apiKey: process.env.GEMINI_API_KEY!,
+  model: "gemini-embedding-001",
+});
 
-    const { pipeline } = await import("@xenova/transformers");
-
-    extractor = await pipeline(
-      "feature-extraction",
-      "Xenova/all-MiniLM-L6-v2"
-    );
-
-    console.log("Local embedding model loaded.");
-  }
-
-  return extractor;
-}
-
-// Single text embedding
+// Used by search.service.ts and vector.service.ts
 export async function generateEmbedding(
   text: string
 ): Promise<number[]> {
-  const model = await getExtractor();
+  const result = await embeddings.embedQuery(text);
 
-  const output = await model(text, {
-    pooling: "mean",
-    normalize: true,
-  });
-
-  return Array.from(output.data);
-}
-
-// Multiple text embeddings
-export async function generateEmbeddings(
-  texts: string[]
-): Promise<number[][]> {
-  const model = await getExtractor();
-
-  console.log(`Generating embeddings for ${texts.length} chunks...`);
-
-  const output = await model(texts, {
-    pooling: "mean",
-    normalize: true,
-  });
-
-  const data = Array.from(output.data) as number[];
-
-  // all-MiniLM-L6-v2 produces 384-dimensional embeddings
-  const dimension = 384;
-
-  const embeddings: number[][] = [];
-
-  for (let i = 0; i < texts.length; i++) {
-    embeddings.push(
-      data.slice(
-        i * dimension,
-        (i + 1) * dimension
-      )
+  if (
+    !Array.isArray(result) ||
+    result.length === 0 ||
+    !result.every(
+      (value) => typeof value === "number"
+    )
+  ) {
+    throw new Error(
+      "Gemini returned an invalid query embedding"
     );
   }
 
-  return embeddings;
+  return result;
+}
+
+// Used by index.service.ts
+export async function generateEmbeddings(
+  texts: string[]
+): Promise<number[][]> {
+  console.log(
+    `Generating Gemini embeddings for ${texts.length} texts...`
+  );
+
+  const results =
+    await embeddings.embedDocuments(texts);
+
+  if (results.length !== texts.length) {
+    throw new Error(
+      `Gemini returned ${results.length} embeddings for ${texts.length} texts.`
+    );
+  }
+
+  for (let i = 0; i < results.length; i++) {
+    const embedding = results[i];
+
+    if (
+      !Array.isArray(embedding) ||
+      embedding.length === 0 ||
+      !embedding.every(
+        (value) => typeof value === "number"
+      )
+    ) {
+      console.error(
+        `Invalid Gemini embedding at index ${i}`
+      );
+
+      console.error(
+        `Text length: ${texts[i]?.length ?? 0}`
+      );
+
+      console.error(
+        `Text preview: ${texts[i]?.slice(0, 300)}`
+      );
+
+      throw new Error(
+        `Gemini returned an invalid embedding at index ${i}`
+      );
+    }
+  }
+
+  return results;
 }

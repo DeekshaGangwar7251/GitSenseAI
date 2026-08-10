@@ -12,7 +12,9 @@
     "test:chroma": "ts-node src/testChroma.ts",
     "test:index": "ts-node src/testIndex.ts",
     "test:search": "ts-node src/testSearch.ts",
-    "test:chat": "ts-node src/testChat.ts"
+    "test:chat": "ts-node src/testChat.ts",
+    "test:gemini-chroma": "ts-node src/testGeminiChroma.ts",
+    "clear:gemini": "ts-node src/clearGeminiCollection.ts"
   },
   "keywords": [],
   "author": "",
