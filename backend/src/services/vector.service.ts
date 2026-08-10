@@ -1,15 +1,25 @@
 import { ChromaClient } from "chromadb";
 import { generateEmbedding } from "./embedding.service";
 
+const chromaUrl = process.env.CHROMA_URL;
+
+if (!chromaUrl) {
+  throw new Error("CHROMA_URL is not defined");
+}
+
+const url = new URL(chromaUrl);
+
 const client = new ChromaClient({
-  host: "gitsenseai-chromadb.onrender.com",
-  port: 443,
-  ssl: true,
+  host: url.hostname,
+  port: Number(url.port || 443),
+  ssl: url.protocol === "https:",
 });
 
-// Use our local Xenova embedding model
-const localEmbeddingFunction = {
-  generate: async (texts: string[]): Promise<number[][]> => {
+// Embedding function used by Chroma for queries/additional operations
+const embeddingFunction = {
+  generate: async (
+    texts: string[]
+  ): Promise<number[][]> => {
     const embeddings: number[][] = [];
 
     for (const text of texts) {
@@ -21,18 +31,22 @@ const localEmbeddingFunction = {
   },
 };
 
-export async function getCollection(collectionName: string) {
+export async function getCollection(
+  collectionName: string
+) {
   try {
     return await client.getCollection({
       name: collectionName,
-      embeddingFunction: localEmbeddingFunction,
+      embeddingFunction,
     });
   } catch {
-    console.log(`Creating collection: ${collectionName}`);
+    console.log(
+      `Creating collection: ${collectionName}`
+    );
 
     return await client.createCollection({
       name: collectionName,
-      embeddingFunction: localEmbeddingFunction,
+      embeddingFunction,
     });
   }
 }
@@ -43,7 +57,7 @@ export async function isCollectionIndexed(
   try {
     const collection = await client.getCollection({
       name: collectionName,
-      embeddingFunction: localEmbeddingFunction,
+      embeddingFunction,
     });
 
     const count = await collection.count();
@@ -62,8 +76,12 @@ export async function deleteCollection(
       name: collectionName,
     });
 
-    console.log(`Deleted collection: ${collectionName}`);
-  } catch (error) {
-    console.log(`Collection "${collectionName}" does not exist.`);
+    console.log(
+      `Deleted collection: ${collectionName}`
+    );
+  } catch {
+    console.log(
+      `Collection "${collectionName}" does not exist.`
+    );
   }
 }
